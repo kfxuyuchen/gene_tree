@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gene Family Gain/Loss Tree Plotter</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+<header>
+  <h1>Gene Family Gain/Loss Tree Plotter</h1>
+  <p>纯前端 Newick 进化树美化工具：gain/loss 饼图、MYA 坐标轴、重命名、导出 SVG/PNG/PDF</p>
+</header>
+
+<main class="layout">
+  <aside class="panel controls">
+    <h2>输入数据</h2>
+
+    <label>粘贴 Newick</label>
+    <textarea id="newickInput"></textarea>
+
+    <label>上传 Newick 文件</label>
+    <input type="file" id="treeFile" accept=".nwk,.newick,.tree,.txt">
+
+    <label>上传 rename 文件</label>
+    <input type="file" id="renameFile" accept=".txt,.tsv,.csv">
+
+    <p class="note">rename 格式：第一列旧名称，后面全部作为新名称。</p>
+
+    <div class="btn-group">
+      <button onclick="loadExample()">加载示例</button>
+      <button onclick="renderTree()">绘图</button>
+    </div>
+
+    <div class="btn-group">
+      <button class="secondary" onclick="downloadSVG()">导出 SVG</button>
+      <button class="secondary" onclick="downloadPNG()">导出 PNG</button>
+      <button class="secondary" onclick="downloadPDF()">导出 PDF</button>
+    </div>
+
+    <div class="btn-group">
+      <button class="secondary" onclick="saveParamsJSON()">保存参数 JSON</button>
+    </div>
+
+    <label>读取参数 JSON</label>
+    <input type="file" id="paramsFile" accept=".json">
+
+    <hr>
+
+    <h2>基础参数</h2>
+
+    <div class="grid2">
+      <div>
+        <label>图宽</label>
+        <input id="figWidth" type="number" value="1400">
+      </div>
+      <div>
+        <label>图高</label>
+        <input id="figHeight" type="number" value="900">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>饼图大小</label>
+        <input id="pieSize" type="number" value="18">
+      </div>
+      <div>
+        <label>分支线宽</label>
+        <input id="branchWidth" type="number" step="0.1" value="1.2">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>叶标签字号</label>
+        <input id="labelSize" type="number" value="13">
+      </div>
+      <div>
+        <label>数字字号</label>
+        <input id="textSize" type="number" value="11">
+      </div>
+    </div>
+
+    <h2>颜色</h2>
+
+    <div class="grid2">
+      <div>
+        <label>Gain / Expansion</label>
+        <input id="gainColor" type="color" value="#d62728">
+      </div>
+      <div>
+        <label>Loss / Contraction</label>
+        <input id="lossColor" type="color" value="#1f77b4">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>Slash 颜色</label>
+        <input id="slashColor" type="color" value="#333333">
+      </div>
+      <div>
+        <label>叶标签颜色</label>
+        <input id="leafLabelColor" type="color" value="#000000">
+      </div>
+    </div>
+
+    <h2>文字背景</h2>
+
+    <div class="grid2">
+      <div>
+        <label>叶标签背景色</label>
+        <input id="labelBgColor" type="color" value="#ffffff">
+      </div>
+      <div>
+        <label>数字背景色</label>
+        <input id="textBgColor" type="color" value="#ffffff">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>背景透明度</label>
+        <input id="bgOpacity" type="number" min="0" max="1" step="0.05" value="0.75">
+      </div>
+      <div>
+        <label>背景 padding</label>
+        <input id="bgPadding" type="number" value="3">
+      </div>
+    </div>
+
+    <h2>叶标签布局</h2>
+
+    <div class="grid2">
+      <div>
+        <label>leaf label gap</label>
+        <input id="leafLabelGap" type="number" step="0.001" value="0.025">
+      </div>
+      <div>
+        <label>leaf pie gap</label>
+        <input id="leafPieGap" type="number" step="0.001" value="0.020">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>leaf text gap</label>
+        <input id="leafTextGap" type="number" step="0.001" value="0.020">
+      </div>
+      <div>
+        <label>MYA tick interval</label>
+        <input id="tickInterval" type="number" placeholder="auto">
+      </div>
+    </div>
+
+    <h2>Branch length</h2>
+
+    <label class="check">
+      <input id="showBranchLength" type="checkbox">
+      显示 branch length
+    </label>
+
+    <div class="grid2">
+      <div>
+        <label>branch length 字号</label>
+        <input id="branchLengthSize" type="number" value="9">
+      </div>
+      <div>
+        <label>branch length offset</label>
+        <input id="branchLengthOffset" type="number" value="3">
+      </div>
+    </div>
+
+    <label>branch length 颜色</label>
+    <input id="branchLengthColor" type="color" value="#555555">
+
+    <h2>图例</h2>
+
+    <label class="check">
+      <input id="showLegend" type="checkbox" checked>
+      显示图例
+    </label>
+
+    <label>图例标题</label>
+    <input id="titleText" type="text" placeholder="Gene family changes">
+
+    <label>图例位置</label>
+    <select id="legendLoc">
+      <option value="upper-left">upper left</option>
+      <option value="upper-right">upper right</option>
+      <option value="lower-left">lower left</option>
+      <option value="lower-right">lower right</option>
+    </select>
+
+    <div class="grid2">
+      <div>
+        <label>legend anchor X</label>
+        <input id="legendAnchorX" type="number" step="0.01" placeholder="auto">
+      </div>
+      <div>
+        <label>legend anchor Y</label>
+        <input id="legendAnchorY" type="number" step="0.01" placeholder="auto">
+      </div>
+    </div>
+
+    <p class="note">legend anchor 使用相对坐标，例如 0.03 和 0.97。</p>
+
+    <h2>树控制</h2>
+
+    <label class="check">
+      <input id="noLadderize" type="checkbox">
+      不 ladderize，保持原顺序
+    </label>
+
+    <hr>
+
+    <h2>帮助</h2>
+
+    <div class="help">
+      <p><b>gain/loss 格式：</b><code>+数字/-数字</code></p>
+      <p>例如：<code>Athali&lt;17&gt;+2094/-1990</code></p>
+      <p>内部节点例如：<code>&lt;33&gt;+493/-731</code></p>
+      <p><b>rename 文件：</b></p>
+      <p><code>Athali Arabidopsis thaliana</code></p>
+      <p>旧名称应匹配清理后的叶标签，即去掉 <code>&lt;...&gt;</code> 和 <code>+gain/-loss</code> 后的名称。</p>
+      <p><b>MYA 轴：</b>叶端显示为 0 MYA，根方向表示更古老时间。</p>
+    </div>
+  </aside>
+
+  <section class="panel viewer">
+    <svg id="plot"></svg>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
