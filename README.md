@@ -1,5 +1,4 @@
-# gene_tree
-Input Figtree，Plot gene family expansion contraction with piechart 。
+网页工具地址：https://kfxuyuchen.github.io/gene_tree/
 # Gene Family Gain/Loss Tree Plotter
 
 一个纯前端网页工具，用于绘制带有 gene family expansion/contraction 信息的进化树。
