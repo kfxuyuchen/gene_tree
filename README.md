@@ -26,3 +26,15 @@ Input Figtree，Plot gene family expansion contraction with piechart 。
 
 ```text  
 +数字/-数字  
+
+#关于进化树文件的准备，这里是提取的cafe5软件输出的结果，在.tre结尾的文件里，复制的是第一个进化树为后续用，保存为id_tree.txt
+
+#clade添加前树处理
+
+sed -E 's/(<[0-9]+>)[^:,;)]+/\1/g' id_tree.txt > cleaned_tree.txt 
+#使用1tree_add_clade.py脚本进行clade添加.得到的进化树文件可用户后续进化树美化
+
+可以使用本网页小工具绘制，也可以使用2plot_gain_loss_tree.py脚本绘制进化树
+
+python 1tree_add_clade.py -h 查看帮助
+python 2plot_gain_loss_tree.py -h查看帮助 
