@@ -347,11 +347,13 @@ function renderTree() {
   const sx = n => xScale(n.xRaw);
   const sy = n => yScale(n.yRaw);
 
+  const labelX = xScale(maxX) + maxX * p.leafLabelGap * 8;
+
   const maxLabelLen = d3.max(leaves, d => renameLabel(cleanLabel(d.name)).length) || 8;
-  const labelX = xScale(maxX) + Math.max(maxX * p.leafLabelGap * 8, 2);
-  const labelWidthEst = Math.max(maxLabelLen * p.labelSize * 0.55, 10);
-  const leafPieX = labelX + labelWidthEst + Math.max(maxX * p.leafPieGap * 8, 2);
-  const leafTextX = leafPieX + Math.max(maxX * p.leafTextGap * 8, 2);
+  const labelWidthEst = maxLabelLen * p.labelSize * 0.55;
+
+  const leafPieX = labelX + labelWidthEst + maxX * p.leafPieGap * 8;
+  const leafTextX = leafPieX + maxX * p.leafTextGap * 8;
 
   drawBranches(g, root, sx, sy, p);
 
