@@ -126,7 +126,7 @@ def add_pie(
 
     gain_angle = 360 * gain / total
 
-    # Loss as full background circle
+    # Loss background circle
     da.add_artist(
         Wedge(
             center=(center, center),
@@ -139,7 +139,7 @@ def add_pie(
         )
     )
 
-    # Gain part
+    # Gain wedge
     da.add_artist(
         Wedge(
             center=(center, center),
@@ -236,6 +236,47 @@ def add_colored_gain_loss_text(
     )
 
     ax.add_artist(ab)
+
+
+def add_root_mrca_text(
+    ax,
+    x,
+    y,
+    value,
+    fontsize=7,
+    color="black",
+    offset_x=-10,
+    offset_y=8,
+    background_color="white"
+):
+    """
+    Add a two-line MRCA label near the root node only.
+
+    Display format:
+        MRCA
+        value
+    """
+    if value is None:
+        return
+
+    ax.annotate(
+        f"MRCA\n{value}",
+        xy=(x, y),
+        xytext=(offset_x, offset_y),
+        textcoords="offset points",
+        ha="center",
+        va="bottom",
+        fontsize=fontsize,
+        color=color,
+        linespacing=0.9,
+        zorder=9,
+        bbox=dict(
+            facecolor=background_color,
+            edgecolor="none",
+            alpha=0.78,
+            boxstyle="round,pad=0.18"
+        )
+    )
 
 
 def get_x_positions_root_left(tree):
@@ -502,7 +543,13 @@ def plot_gain_loss_tree(
     branch_length_size=6,
     branch_length_color="#555555",
     branch_length_bg_color="white",
-    branch_length_offset=1
+    branch_length_offset=1,
+    root_mrca=None,
+    root_mrca_size=7,
+    root_mrca_color="black",
+    root_mrca_bg_color="white",
+    root_mrca_offset_x=-10,
+    root_mrca_offset_y=8
 ):
     tree = Phylo.read(tree_file, "newick")
 
@@ -536,6 +583,22 @@ def plot_gain_loss_tree(
     )
 
     # =========================
+    # 1.5. Root MRCA label only
+    # =========================
+    if root_mrca is not None:
+        add_root_mrca_text(
+            ax=ax,
+            x=x_pos[tree.root],
+            y=y_pos[tree.root],
+            value=root_mrca,
+            fontsize=root_mrca_size,
+            color=root_mrca_color,
+            background_color=root_mrca_bg_color,
+            offset_x=root_mrca_offset_x,
+            offset_y=root_mrca_offset_y
+        )
+
+    # =========================
     # 2. Leaf annotation layout
     # =========================
     labels = [
@@ -553,7 +616,7 @@ def plot_gain_loss_tree(
     leaf_text_x = leaf_pie_x + max(max_x * leaf_text_gap, 3.0)
 
     # =========================
-    # 3. Internal node pies and labels
+    # 3. Internal node pies and gain/loss labels
     # =========================
     internal_index = 0
 
@@ -724,9 +787,6 @@ def plot_gain_loss_tree(
             fontsize=9
         )
 
-        # Important:
-        # --title-text is displayed above the legend.
-        # It follows --legend-loc and --legend-anchor.
         if title_text:
             legend_kwargs["title"] = title_text
             legend_kwargs["title_fontsize"] = title_size
@@ -735,12 +795,6 @@ def plot_gain_loss_tree(
             legend_kwargs["bbox_to_anchor"] = legend_anchor
 
         ax.legend(**legend_kwargs)
-
-    # =========================
-    # 8. Figure title
-    # =========================
-    # No ax.set_title() here.
-    # --title-text is now used as the legend title.
 
     plt.tight_layout()
     plt.savefig(output, dpi=300, bbox_inches="tight")
@@ -754,6 +808,9 @@ def main():
             "This script reads a Newick tree containing gain/loss information in node names,\n"
             "such as '+2094/-1990', and draws a rectangular phylogenetic tree with pie charts\n"
             "and colored gain/loss numbers.\n\n"
+            "It can also display a two-line MRCA label near the root node only:\n"
+            "  MRCA\n"
+            "  VALUE\n\n"
             "Tree direction:\n"
             "  root on the left, leaves on the right.\n\n"
             "X-axis:\n"
@@ -768,6 +825,18 @@ def main():
             "  <33>+493/-731\n\n"
             "Basic usage:\n"
             "  python plot_gain_loss_tree.py -i tree.nwk -o result.pdf\n\n"
+            "Add root MRCA label:\n"
+            "  python plot_gain_loss_tree.py \\\n"
+            "    -i tree.nwk \\\n"
+            "    -o result.pdf \\\n"
+            "    --root-mrca 123.4\n\n"
+            "Adjust root MRCA label position:\n"
+            "  python plot_gain_loss_tree.py \\\n"
+            "    -i tree.nwk \\\n"
+            "    -o result.pdf \\\n"
+            "    --root-mrca 123.4 \\\n"
+            "    --root-mrca-offset-x -18 \\\n"
+            "    --root-mrca-offset-y 12\n\n"
             "Use rename file:\n"
             "  python plot_gain_loss_tree.py \\\n"
             "    -i tree.nwk \\\n"
@@ -827,12 +896,14 @@ def main():
             "Notes:\n"
             "  1. Gain/loss information must be written as +number/-number.\n"
             "  2. Leaf labels are cleaned by removing '<...>' and '+gain/-loss'.\n"
-            "  3. In rename file, the first field is the old name, and the rest is the new name.\n"
-            "  4. Rename file supports tab or space separation.\n"
-            "  5. New names may contain spaces.\n"
-            "  6. Use quotes around color codes, for example '#D55E00'.\n"
-            "  7. Branch length labels are placed above branches when --show-branch-length is used.\n"
-            "  8. Use --branch-length-offset to adjust the vertical distance from branch lines.\n"
+            "  3. Root MRCA label is controlled by --root-mrca and is shown only near the root node.\n"
+            "  4. In rename file, the first field is the old name, and the rest is the new name.\n"
+            "  5. Rename file supports tab or space separation.\n"
+            "  6. New names may contain spaces.\n"
+            "  7. Use quotes around color codes, for example '#D55E00'.\n"
+            "  8. Branch length labels are placed above branches when --show-branch-length is used.\n"
+            "  9. Use --branch-length-offset to adjust the vertical distance from branch lines.\n"
+            " 10. Root MRCA is not parsed from Newick automatically; you provide it with --root-mrca.\n"
         )
     )
 
@@ -1205,6 +1276,76 @@ def main():
     )
 
     parser.add_argument(
+        "--root-mrca",
+        default=None,
+        metavar="VALUE",
+        help=(
+            "Display a two-line MRCA label near the root node only.\n"
+            "Shown as:\n"
+            "  MRCA\n"
+            "  VALUE\n"
+            "Example:\n"
+            "  --root-mrca 123.4\n"
+            "Default: not shown"
+        )
+    )
+
+    parser.add_argument(
+        "--root-mrca-size",
+        type=float,
+        default=7,
+        metavar="FLOAT",
+        help=(
+            "Font size of the root MRCA label.\n"
+            "Default: 7"
+        )
+    )
+
+    parser.add_argument(
+        "--root-mrca-color",
+        default="black",
+        metavar="COLOR",
+        help=(
+            "Text color of the root MRCA label.\n"
+            "Default: black"
+        )
+    )
+
+    parser.add_argument(
+        "--root-mrca-bg-color",
+        default="white",
+        metavar="COLOR",
+        help=(
+            "Background color of the root MRCA label.\n"
+            "Default: white"
+        )
+    )
+
+    parser.add_argument(
+        "--root-mrca-offset-x",
+        type=float,
+        default=-10,
+        metavar="FLOAT",
+        help=(
+            "Horizontal offset of the root MRCA label relative to the root node, in points.\n"
+            "Negative values move it left; positive values move it right.\n"
+            "Default: -10"
+        )
+    )
+
+    parser.add_argument(
+        "--root-mrca-offset-y",
+        type=float,
+        default=8,
+        metavar="FLOAT",
+        help=(
+            "Vertical offset of the root MRCA label relative to the root node, in points.\n"
+            "Positive values move it upward; negative values move it downward.\n"
+            "Default: 8"
+        )
+    )
+
+    parser.add_argument(
         "--no-ladderize",
         action="store_true",
         help=(
@@ -1252,7 +1393,13 @@ def main():
         branch_length_size=args.branch_length_size,
         branch_length_color=args.branch_length_color,
         branch_length_bg_color=args.branch_length_bg_color,
-        branch_length_offset=args.branch_length_offset
+        branch_length_offset=args.branch_length_offset,
+        root_mrca=args.root_mrca,
+        root_mrca_size=args.root_mrca_size,
+        root_mrca_color=args.root_mrca_color,
+        root_mrca_bg_color=args.root_mrca_bg_color,
+        root_mrca_offset_x=args.root_mrca_offset_x,
+        root_mrca_offset_y=args.root_mrca_offset_y
     )
 
 
