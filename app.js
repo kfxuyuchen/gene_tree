@@ -274,6 +274,15 @@ function getParams() {
     branchLengthOffset: num("branchLengthOffset"),
     branchLengthColor: val("branchLengthColor"),
 
+    showRootMrca: bool("showRootMrca"),
+    rootMrcaValue: val("rootMrcaValue"),
+    rootMrcaSize: num("rootMrcaSize"),
+    rootMrcaOffsetX: num("rootMrcaOffsetX"),
+    rootMrcaOffsetY: num("rootMrcaOffsetY"),
+    rootMrcaColor: val("rootMrcaColor"),
+    rootMrcaBgColor: val("rootMrcaBgColor"),
+    rootMrcaBgOpacity: num("rootMrcaBgOpacity"),
+
     noLadderize: bool("noLadderize"),
 
     showLegend: bool("showLegend"),
@@ -345,6 +354,15 @@ function renderTree() {
   const leafTextX = leafPieX + Math.max(maxX * p.leafTextGap * 8, 35);
 
   drawBranches(g, root, sx, sy, p);
+
+  if (p.showRootMrca && p.rootMrcaValue) {
+    addRootMrcaText(
+      g,
+      sx(root) + p.rootMrcaOffsetX,
+      sy(root) + p.rootMrcaOffsetY,
+      p
+    );
+  }
 
   let internalIndex = 0;
 
@@ -493,6 +511,35 @@ function addGainLossText(g, x, y, gain, loss, p, anchor) {
     .text("-" + loss);
 
   addTextBackground(text, p.textBgColor, p.bgOpacity, p.bgPadding);
+
+  return text;
+}
+
+function addRootMrcaText(g, x, y, p) {
+  const text = g.append("text")
+    .attr("x", x)
+    .attr("y", y)
+    .attr("text-anchor", "middle")
+    .attr("dominant-baseline", "middle")
+    .attr("font-size", p.rootMrcaSize)
+    .attr("fill", p.rootMrcaColor);
+
+  text.append("tspan")
+    .attr("x", x)
+    .attr("dy", "0em")
+    .text("MRCA");
+
+  text.append("tspan")
+    .attr("x", x)
+    .attr("dy", "1.15em")
+    .text(p.rootMrcaValue);
+
+  addTextBackground(
+    text,
+    p.rootMrcaBgColor,
+    p.rootMrcaBgOpacity,
+    p.bgPadding
+  );
 
   return text;
 }
@@ -690,7 +737,7 @@ function downloadPDF() {
 
 function saveParamsJSON() {
   const data = {
-    version: "2.0",
+    version: "2.1",
     params: getParams(),
     renameDict,
     newick: document.getElementById("newickInput").value
@@ -773,6 +820,15 @@ function setParams(p) {
   setVal("branchLengthOffset", p.branchLengthOffset);
   setVal("branchLengthColor", p.branchLengthColor);
 
+  setBool("showRootMrca", p.showRootMrca);
+  setVal("rootMrcaValue", p.rootMrcaValue);
+  setVal("rootMrcaSize", p.rootMrcaSize);
+  setVal("rootMrcaOffsetX", p.rootMrcaOffsetX);
+  setVal("rootMrcaOffsetY", p.rootMrcaOffsetY);
+  setVal("rootMrcaColor", p.rootMrcaColor);
+  setVal("rootMrcaBgColor", p.rootMrcaBgColor);
+  setVal("rootMrcaBgOpacity", p.rootMrcaBgOpacity);
+
   setBool("noLadderize", p.noLadderize);
 
   setBool("showLegend", p.showLegend);
@@ -799,6 +855,9 @@ function loadExample() {
     Osati: "Oryza sativa japonica",
     Zmaya: "Zea mays"
   };
+
+  document.getElementById("showRootMrca").checked = true;
+  document.getElementById("rootMrcaValue").value = "50";
 
   renderTree();
 }
