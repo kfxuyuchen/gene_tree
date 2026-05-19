@@ -12,7 +12,7 @@
 <body>
 <header>
   <h1>Gene Family Gain/Loss Tree Plotter</h1>
-  <p>纯前端 Newick 进化树美化工具：gain/loss 饼图、MYA 坐标轴、重命名、导出 SVG/PNG/PDF</p>
+  <p>纯前端 Newick 进化树美化工具：gain/loss 饼图、MYA 坐标轴、重命名、Root MRCA、导出 SVG/PNG/PDF</p>
 </header>
 
 <main class="layout">
@@ -178,6 +178,49 @@
     <label>branch length 颜色</label>
     <input id="branchLengthColor" type="color" value="#555555">
 
+    <h2>Root MRCA</h2>
+
+    <label class="check">
+      <input id="showRootMrca" type="checkbox">
+      显示根节点 MRCA
+    </label>
+
+    <label>Root MRCA 数值</label>
+    <input id="rootMrcaValue" type="text" placeholder="例如：123.4">
+
+    <div class="grid2">
+      <div>
+        <label>MRCA 字号</label>
+        <input id="rootMrcaSize" type="number" value="11">
+      </div>
+      <div>
+        <label>MRCA X offset</label>
+        <input id="rootMrcaOffsetX" type="number" value="-18">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>MRCA Y offset</label>
+        <input id="rootMrcaOffsetY" type="number" value="-18">
+      </div>
+      <div>
+        <label>MRCA 文字颜色</label>
+        <input id="rootMrcaColor" type="color" value="#000000">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>MRCA 背景色</label>
+        <input id="rootMrcaBgColor" type="color" value="#ffffff">
+      </div>
+      <div>
+        <label>MRCA 背景透明度</label>
+        <input id="rootMrcaBgOpacity" type="number" min="0" max="1" step="0.05" value="0.75">
+      </div>
+    </div>
+
     <h2>图例</h2>
 
     <label class="check">
@@ -228,6 +271,7 @@
       <p><code>Athali Arabidopsis thaliana</code></p>
       <p>旧名称应匹配清理后的叶标签，即去掉 <code>&lt;...&gt;</code> 和 <code>+gain/-loss</code> 后的名称。</p>
       <p><b>MYA 轴：</b>叶端显示为 0 MYA，根方向表示更古老时间。</p>
+      <p><b>Root MRCA：</b>勾选后只在根节点附近显示两行标签：<code>MRCA</code> 和输入的数值。</p>
     </div>
   </aside>
 
